@@ -18,34 +18,34 @@ def find_optimal_splits(labels,weights):
                 optimal_split = split
                 optimal_loss = cur_loss
                 optimal_direction = direction
-    alpha = 0.5 * np.log(optimal_loss / (1 - optimal_loss))
+    alpha = 0.5 * np.log((1 - optimal_loss) / optimal_loss)
     return optimal_split,optimal_direction,optimal_loss,alpha
 
 def next_coefficents(labels,weights):
     split,direction,loss,alpha = find_optimal_splits(labels,weights)
     predict_labels = np.array([direction if i < split else -direction for i in range(len(labels))])
     new_weights = np.array([alpha if labels[j] != predict_labels[j] else -alpha for j in range(len(labels))])
-    new_weights = np.power(new_weights,np.e)
+    new_weights = np.power(np.e,new_weights)
     new_weights = weights * new_weights / np.sum(new_weights)
-    return new_weights
+    return split,direction,loss,alpha,new_weights
 
 def adaboost(threshold,labels):
     weights = np.repeat(1./len(labels),len(labels))
-    split, direction, loss,alpha = find_optimal_splits(labels,weights)
-    splits = [split]
-    alphas = [alpha]
-    directions = [direction]
+    loss = 1e16
+    splits = []
+    alphas = []
+    directions = []
     while loss > threshold:
-        new_weights = next_coefficents(labels,weights)
-        split, direction, loss,alpha = find_optimal_splits()
+        split, direction, loss, alpha, new_weights = next_coefficents(labels,weights)
         splits.append(split)
         alphas.append(alpha)
         directions.append([direction])
+        weights = new_weights
     return splits,directions,alphas
 
 if __name__ == '__main__':
     labels = np.array([1,1,1,-1,-1,-1,1,1,1,-1])
-    splits,directions,alphas = adaboost(0,labels)
+    splits,directions,alphas = adaboost(0.01,labels)
     print(splits,directions,alphas)
 
 
